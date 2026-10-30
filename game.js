@@ -39,8 +39,26 @@ const overlay = document.getElementById('overlay');
 const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
+const pauseMenu = document.getElementById('pause-menu');
+const resumeBtn = document.getElementById('resume-btn');
+const menuRestartBtn = document.getElementById('menu-restart-btn');
+const controlsBtn = document.getElementById('controls-btn');
+const menuControls = document.getElementById('menu-controls');
+const startLevelEl = document.getElementById('start-level');
+const levelDownBtn = document.getElementById('level-down');
+const levelUpBtn = document.getElementById('level-up');
 
-let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
+const MAX_START_LEVEL = 10;
+
+let board, current, next, score, lines, level, startLevelOfGame, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
+
+// Ajuste del menú: persiste entre partidas, por eso no se reinicia en init()
+let startLevel = 1;
+
+// Teclas pulsadas ahora mismo, y teclas ignoradas hasta que se suelten
+// (evita movimientos accidentales al cerrar el menú con una tecla mantenida)
+const keysDown = new Set();
+let blockedKeys = new Set();
 
 function createBoard() {
   return Array.from({ length: ROWS }, () => new Array(COLS).fill(0));
@@ -106,10 +124,14 @@ function clearLines() {
   if (cleared) {
     lines += cleared;
     score += (LINE_SCORES[cleared] || 0) * level;
-    level = Math.floor(lines / 10) + 1;
-    dropInterval = Math.max(100, 1000 - (level - 1) * 90);
+    level = startLevelOfGame + Math.floor(lines / 10);
+    dropInterval = speedFor(level);
     updateHUD();
   }
+}
+
+function speedFor(lvl) {
+  return Math.max(100, 1000 - (lvl - 1) * 90);
 }
 
 function ghostY() {
@@ -227,17 +249,71 @@ function endGame() {
   overlay.classList.remove('hidden');
 }
 
+function openPauseMenu() {
+  paused = true;
+  cancelAnimationFrame(animId);
+  setControlsVisible(false);
+  pauseMenu.classList.remove('hidden');
+  resumeBtn.focus();
+}
+
+function closePauseMenu() {
+  pauseMenu.classList.add('hidden');
+  if (pauseMenu.contains(document.activeElement)) document.activeElement.blur();
+  // Las teclas que siguen pulsadas no actúan hasta soltarlas
+  blockedKeys = new Set(keysDown);
+}
+
+function resume() {
+  if (!paused) return;
+  closePauseMenu();
+  paused = false;
+  lastTime = performance.now();
+  loop(lastTime);
+}
+
 function togglePause() {
   if (gameOver) return;
-  paused = !paused;
-  if (!paused) {
-    lastTime = performance.now();
-    loop(lastTime);
-  } else {
-    cancelAnimationFrame(animId);
-    overlayTitle.textContent = 'PAUSA';
-    overlayScore.textContent = '';
-    overlay.classList.remove('hidden');
+  if (paused) resume();
+  else openPauseMenu();
+}
+
+function setControlsVisible(visible) {
+  menuControls.classList.toggle('hidden', !visible);
+  controlsBtn.setAttribute('aria-expanded', String(visible));
+  controlsBtn.textContent = visible ? 'Ocultar controles' : 'Ver controles';
+}
+
+function setStartLevel(value) {
+  startLevel = Math.min(MAX_START_LEVEL, Math.max(1, value));
+  startLevelEl.textContent = startLevel;
+  startLevelEl.setAttribute('aria-valuenow', String(startLevel));
+  levelDownBtn.disabled = startLevel === 1;
+  levelUpBtn.disabled = startLevel === MAX_START_LEVEL;
+}
+
+function handleMenuKey(e) {
+  const items = [...pauseMenu.querySelectorAll('.menu-item')];
+  const idx = items.indexOf(document.activeElement);
+  switch (e.code) {
+    case 'ArrowDown':
+    case 'ArrowUp': {
+      e.preventDefault();
+      const step = e.code === 'ArrowDown' ? 1 : -1;
+      const nextIdx = idx === -1 ? 0 : (idx + step + items.length) % items.length;
+      items[nextIdx].focus();
+      break;
+    }
+    case 'ArrowLeft':
+    case 'ArrowRight':
+      e.preventDefault();
+      if (document.activeElement === startLevelEl)
+        setStartLevel(startLevel + (e.code === 'ArrowRight' ? 1 : -1));
+      break;
+    case 'Space':
+      // Space solo actúa sobre botones del menú, nunca hace scroll
+      if (!(document.activeElement instanceof HTMLButtonElement)) e.preventDefault();
+      break;
   }
 }
 
@@ -261,10 +337,12 @@ function init() {
   board = createBoard();
   score = 0;
   lines = 0;
-  level = 1;
+  startLevelOfGame = startLevel;
+  level = startLevel;
+  if (paused) closePauseMenu();
   paused = false;
   gameOver = false;
-  dropInterval = 1000;
+  dropInterval = speedFor(level);
   dropAccum = 0;
   lastTime = performance.now();
   next = randomPiece();
@@ -276,8 +354,18 @@ function init() {
 }
 
 document.addEventListener('keydown', e => {
-  if (e.code === 'KeyP') { togglePause(); return; }
-  if (paused || gameOver) return;
+  keysDown.add(e.code);
+  if (e.code === 'KeyP' || e.code === 'Escape') {
+    if (!e.repeat) togglePause();
+    return;
+  }
+  // Menú abierto: las teclas solo navegan el menú, nunca mueven piezas
+  if (paused) { handleMenuKey(e); return; }
+  if (gameOver) return;
+  if (blockedKeys.has(e.code)) {
+    if (e.code === 'Space' || e.code.startsWith('Arrow')) e.preventDefault();
+    return;
+  }
   switch (e.code) {
     case 'ArrowLeft':
       if (!collide(current.shape, current.x - 1, current.y)) current.x--;
@@ -300,7 +388,25 @@ document.addEventListener('keydown', e => {
   updateHUD();
 });
 
+document.addEventListener('keyup', e => {
+  keysDown.delete(e.code);
+  blockedKeys.delete(e.code);
+});
+
+// Si la ventana pierde el foco no llegan los keyup: olvidar todo
+window.addEventListener('blur', () => {
+  keysDown.clear();
+  blockedKeys.clear();
+});
+
 restartBtn.addEventListener('click', init);
+resumeBtn.addEventListener('click', resume);
+menuRestartBtn.addEventListener('click', init);
+controlsBtn.addEventListener('click', () => {
+  setControlsVisible(menuControls.classList.contains('hidden'));
+});
+levelDownBtn.addEventListener('click', () => setStartLevel(startLevel - 1));
+levelUpBtn.addEventListener('click', () => setStartLevel(startLevel + 1));
 
 // Tema: oscuro por defecto, el switch cambia a claro
 const themeToggle = document.getElementById('theme-toggle');
@@ -313,4 +419,5 @@ themeToggle.addEventListener('click', () => {
   themeToggle.blur(); // evita que Space/Enter vuelva a activar el switch
 });
 
+setStartLevel(startLevel);
 init();
