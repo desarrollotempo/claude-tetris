@@ -13,6 +13,7 @@ const COLORS = [
   '#e57373', // Z - red
   '#7986cb', // J - indigo
   '#ffb74d', // L - orange
+  '#90a4ae', // N - tuerca (gris acero)
 ];
 
 const PIECES = [
@@ -24,6 +25,7 @@ const PIECES = [
   [[5,5,0],[0,5,5],[0,0,0]],                  // Z
   [[6,0,0],[6,6,6],[0,0,0]],                  // J
   [[0,0,7],[7,7,7],[0,0,0]],                  // L
+  [[8,8,8],[8,0,8],[8,8,8]],                  // N (tuerca, centro hueco)
 ];
 
 const LINE_SCORES = [0, 100, 300, 500, 800];
@@ -69,7 +71,7 @@ function createBoard() {
 }
 
 function randomPiece() {
-  const type = Math.floor(Math.random() * 7) + 1;
+  const type = Math.floor(Math.random() * 8) + 1;
   const shape = PIECES[type].map(row => [...row]);
   return { type, shape, x: Math.floor(COLS / 2) - Math.floor(shape[0].length / 2), y: 0 };
 }
@@ -271,7 +273,7 @@ function drawBlockPixel(context, x, y, color, size, alpha) {
 const SKINS = {
   retro: {
     label: 'Retro',
-    colors: [...COLORS, '#a1887f'],
+    colors: COLORS,
     bg: null,
     grid: null,
     drawBlock: drawBlockRetro,
@@ -319,6 +321,17 @@ function drawBlock(context, x, y, colorIndex, size, alpha) {
   skin.drawBlock(context, x, y, skin.colors[colorIndex], size, alpha);
 }
 
+// círculo en el hueco central de la tuerca; (x, y) es la esquina de la pieza
+function drawNutHole(context, x, y, size, alpha) {
+  context.globalAlpha = alpha ?? 1;
+  context.strokeStyle = skin.colors[8];
+  context.lineWidth = 3;
+  context.beginPath();
+  context.arc((x + 1.5) * size, (y + 1.5) * size, size * 0.3, 0, Math.PI * 2);
+  context.stroke();
+  context.globalAlpha = 1;
+}
+
 function drawGrid() {
   ctx.strokeStyle = skin.grid || (document.documentElement.dataset.theme === 'light' ? '#e3e6f0' : '#22222e');
   ctx.lineWidth = 0.5;
@@ -355,11 +368,13 @@ function draw() {
     for (let c = 0; c < current.shape[r].length; c++)
       if (current.shape[r][c])
         drawBlock(ctx, current.x + c, gy + r, current.shape[r][c], BLOCK, 0.2);
+  if (current.type === 8) drawNutHole(ctx, current.x, gy, BLOCK, 0.2);
 
   // current piece
   for (let r = 0; r < current.shape.length; r++)
     for (let c = 0; c < current.shape[r].length; c++)
       drawBlock(ctx, current.x + c, current.y + r, current.shape[r][c], BLOCK);
+  if (current.type === 8) drawNutHole(ctx, current.x, current.y, BLOCK);
 }
 
 function drawNext() {
@@ -375,6 +390,7 @@ function drawNext() {
   for (let r = 0; r < shape.length; r++)
     for (let c = 0; c < shape[r].length; c++)
       drawBlock(nextCtx, offX + c, offY + r, shape[r][c], NB);
+  if (next.type === 8) drawNutHole(nextCtx, offX, offY, NB);
 }
 
 function endGame() {
