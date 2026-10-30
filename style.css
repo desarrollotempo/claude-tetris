@@ -240,3 +240,145 @@ kbd {
 [data-theme='light'] .theme-toggle .switch::after {
   transform: translateX(18px);
 }
+
+/* ---- Tabla de records ---- */
+.overlay.start #overlay-title {
+  color: var(--accent);
+}
+
+.records {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  max-width: 420px;
+}
+
+.records.hidden,
+.records .hidden,
+#start-btn.hidden,
+#restart-btn.hidden {
+  display: none;
+}
+
+.new-record {
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: var(--accent);
+  text-shadow: 0 0 10px var(--accent-glow);
+}
+
+.name-form {
+  display: flex;
+  gap: 8px;
+}
+
+.name-form input {
+  background: var(--board-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 14px;
+  width: 160px;
+  user-select: text;
+}
+
+.name-form input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+#save-btn,
+#start-btn {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border: none;
+  border-radius: 6px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: background 0.15s;
+}
+
+#save-btn {
+  padding: 6px 14px;
+  font-size: 13px;
+}
+
+#start-btn {
+  margin-top: 8px;
+  padding: 10px 28px;
+  font-size: 14px;
+}
+
+#save-btn:hover,
+#start-btn:hover {
+  background: var(--accent-hover);
+}
+
+.records-table {
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 300px;
+}
+
+.records-table th {
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--label);
+  font-weight: 600;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.records-table td {
+  padding: 4px 8px;
+  font-family: 'Courier New', Courier, monospace;
+  color: var(--text);
+}
+
+.records-table td:nth-child(2) {
+  font-family: inherit;
+  text-align: left;
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.records-table tr.highlight td {
+  background: var(--accent-glow);
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.records-empty {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.records-stats {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.records-stats span {
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.records-stats span.new::after {
+  content: ' ★';
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--danger);
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: underline;
+}
