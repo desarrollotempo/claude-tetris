@@ -120,6 +120,23 @@ body {
   border-radius: 4px;
 }
 
+/* ---- Selector de skin ---- */
+.skin-select {
+  background: var(--kbd-bg);
+  border: 1px solid var(--kbd-border);
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 12px;
+  padding: 4px 6px;
+  cursor: pointer;
+}
+
+[data-skin='neon'] #board,
+[data-skin='neon'] #next-canvas {
+  background: #000;
+  border-color: #1f1f3a;
+}
+
 /* ---- Controles ---- */
 .controls ul {
   list-style: none;
