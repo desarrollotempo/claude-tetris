@@ -476,3 +476,19 @@ kbd {
   cursor: pointer;
   text-decoration: underline;
 }
+
+/* ---- Selector de skin ---- */
+.skin-select {
+  background: var(--kbd-bg);
+  border: 1px solid var(--kbd-border);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 12px;
+  padding: 4px 6px;
+  cursor: pointer;
+}
+
+.skin-select:focus {
+  outline: 1px solid var(--accent);
+}
