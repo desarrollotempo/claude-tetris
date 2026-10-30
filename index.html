@@ -52,6 +52,30 @@
         <div class="overlay-box">
           <p id="overlay-title">GAME OVER</p>
           <p id="overlay-score"></p>
+
+          <!-- Tabla de records (pantalla de inicio y game over) -->
+          <div id="records-ui" class="records hidden">
+            <p id="new-record-msg" class="new-record hidden">¡Nuevo récord!</p>
+            <form id="name-form" class="name-form hidden">
+              <input id="name-input" type="text" maxlength="12" placeholder="Tu nombre" autocomplete="off" spellcheck="false" aria-label="Nombre del jugador" />
+              <button type="submit" id="save-btn">Guardar</button>
+            </form>
+            <span class="label">MEJORES PUNTUACIONES</span>
+            <table class="records-table">
+              <thead>
+                <tr><th>#</th><th>Nombre</th><th>Puntos</th><th>Líneas</th><th>Nivel</th></tr>
+              </thead>
+              <tbody id="records-body"></tbody>
+            </table>
+            <p id="records-empty" class="records-empty">Todavía no hay récords</p>
+            <p class="records-stats">
+              Mejor combo: <span id="best-combo">0</span> ·
+              Líneas máx.: <span id="max-lines">0</span>
+            </p>
+            <button id="reset-records-btn" type="button" class="link-btn">Borrar records</button>
+          </div>
+
+          <button id="start-btn" class="hidden">Jugar</button>
           <button id="restart-btn">Reiniciar</button>
 
           <!-- Menú de pausa: solo visible en PAUSA -->
